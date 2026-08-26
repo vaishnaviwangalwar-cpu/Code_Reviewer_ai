@@ -13,6 +13,24 @@ const categoryLabels = {
   style: "Style",
 };
 
+function cleanCode(code) {
+  if (!code) return "";
+  let clean = code.trim();
+  // Strip markdown code fences if Gemini outputs them
+  if (clean.startsWith("```")) {
+    const firstNewline = clean.indexOf("\n");
+    if (firstNewline !== -1) {
+      clean = clean.slice(firstNewline + 1);
+    } else {
+      clean = "";
+    }
+  }
+  if (clean.endsWith("```")) {
+    clean = clean.slice(0, -3);
+  }
+  return clean.trim();
+}
+
 function ReviewResults({ issues, streamingText, isStreaming, originalCode }) {
   // Track the fixed code for each issue by its index
   const [fixedCode, setFixedCode] = useState({});
@@ -125,7 +143,7 @@ function ReviewResults({ issues, streamingText, isStreaming, originalCode }) {
                   </div>
                   <div className="diff-panel diff-fixed">
                     <h4>Fixed</h4>
-                    <pre>{fixedCode[index]}</pre>
+                    <pre>{cleanCode(fixedCode[index]) || (fixingIndex === index ? "Fixing code..." : fixedCode[index])}</pre>
                   </div>
                 </div>
               )}
@@ -137,4 +155,5 @@ function ReviewResults({ issues, streamingText, isStreaming, originalCode }) {
   );
 }
 
-export default ReviewResults;
+export default ReviewResults;
+
