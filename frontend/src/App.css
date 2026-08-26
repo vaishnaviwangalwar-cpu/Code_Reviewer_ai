@@ -1,0 +1,263 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  font-size: 2rem;
+  color: #38bdf8;
+}
+
+
+.header p {
+  color: #94a3b8;
+  margin-top: 0.25rem;
+}
+
+.tabs {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.tabs button {
+  padding: 0.5rem 1.5rem;
+  border: 1px solid #334155;
+  background: transparent;
+  color: #94a3b8;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.tabs button.active {
+  background: #1e293b;
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+
+.code-input {
+  margin-bottom: 1.5rem;
+}
+
+.code-input textarea {
+  width: 100%;
+  padding: 1rem;
+  background: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  font-family: "Fira Code", "Consolas", monospace;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.code-input button {
+  margin-top: 0.75rem;
+  padding: 0.75rem 2rem;
+  background: #38bdf8;
+  color: #0f172a;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+
+.code-input button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.results-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
+}
+
+.streaming-indicator {
+  padding: 1rem;
+  background: #1e293b;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.pulse {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #38bdf8;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  animation: pulse 1s infinite;
+}
+
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.streaming-preview {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: #0f172a;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  color: #94a3b8;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.issues-list h2 {
+  margin-bottom: 1rem;
+  color: #e2e8f0;
+}
+
+
+.issue-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.issue-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.severity-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+}
+
+.severity-badge.critical { background-color: #e74c3c; }
+.severity-badge.warning { background-color: #f39c12; }
+.severity-badge.info { background-color: #3498db; }
+
+
+.category-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  background: #334155;
+  color: #94a3b8;
+  text-transform: capitalize;
+}
+
+.issue-card h3 {
+  font-size: 0.95rem;
+  color: #e2e8f0;
+}
+
+.issue-card p {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.history {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1rem;
+}
+
+.history-list h2 {
+  margin-bottom: 1rem;
+}
+
+
+.history-item {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+
+.history-item.selected {
+  border-color: #38bdf8;
+}
+
+.code-preview {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+.review-date {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.issue-count {
+  font-size: 0.75rem;
+  color: #38bdf8;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-bar button {
+  padding: 0.35rem 0.75rem;
+  background: #1e293b;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+
+.filter-bar button.active {
+  background: #334155;
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+.history-detail {
+  padding: 0.5rem;
+}
+
