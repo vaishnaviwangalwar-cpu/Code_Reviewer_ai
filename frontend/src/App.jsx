@@ -9,11 +9,13 @@ function App() {
   const [streamingText, setStreamingText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [activeTab, setActiveTab] = useState("review");
+  const [currentCode, setCurrentCode] = useState("");
 
   const handleSubmit = async (code) => {
     setIssues([]);
     setStreamingText("");
     setIsStreaming(true);
+    setCurrentCode(code);
 
     try {
       const response = await fetch("http://localhost:8000/review/stream", {
@@ -84,6 +86,7 @@ function App() {
               issues={issues}
               streamingText={streamingText}
               isStreaming={isStreaming}
+              originalCode={currentCode}
             />
           </>
         ) : (

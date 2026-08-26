@@ -71,3 +71,28 @@ def review_code_stream(code: str):
         # Yield each text chunk as it arrives from Gemini
         if chunk.text:
             yield chunk.text
+
+FIX_SYSTEM_PROMPT = (
+    "You are an expert code fixer. Given a code snippet and a specific issue, "
+    "provide the corrected version of the code that fixes the described issue. "
+    "Only output the corrected code, no explanations."
+)
+
+
+def fix_issue_stream(code: str, issue_title: str, issue_description: str):
+    # Build a prompt with the original code and the specific issue
+    prompt = (
+        f"Original code:\n```\n{code}\n```\n\n"
+        f"Issue: {issue_title}\n"
+        f"Description: {issue_description}\n\n"
+        f"Provide the corrected code:"
+    )
+    for chunk in client.models.generate_content_stream(
+        model="gemini-2.5-flash",
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            system_instruction=FIX_SYSTEM_PROMPT,
+        ),
+    ):
+        if chunk.text:
+            yield chunk.text

@@ -4,8 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from database import init_db, save_review, get_all_reviews
-from gemini_client import review_code, review_code_stream
-
+from gemini_client import review_code, review_code_stream, fix_issue_stream
 # Initialize the database
 init_db()
 
@@ -60,6 +59,23 @@ def stream_review(request: ReviewRequest):
             yield f"data: {json.dumps({'done': True, 'error': 'Failed to parse response'})}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+class FixRequest(BaseModel):
+    code: str
+    issue_title: str
+    issue_description: str
+
+@app.post("/review/fix")
+def stream_fix(request: FixRequest):
+    # Stream Gemini's fix response as SSE events
+    def event_generator():
+        for chunk in fix_issue_stream(
+            request.code, request.issue_title, request.issue_description
+        ):
+            yield f"data: {json.dumps({'chunk': chunk})}\n\n"
+        yield f"data: {json.dumps({'done': True})}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")    
 
 # Return all past reviews from the database
 @app.get("/reviews")

@@ -188,6 +188,56 @@ body {
   line-height: 1.5;
 }
 
+.fix-button {
+  margin-left: auto;
+  padding: 0.25rem 0.75rem;
+  background: #1e3a5f;
+  color: #38bdf8;
+  border: 1px solid #38bdf8;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.fix-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.diff-view {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.diff-panel h4 {
+  font-size: 0.8rem;
+  margin-bottom: 0.4rem;
+  color: #94a3b8;
+}
+
+.diff-panel pre {
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.diff-original pre {
+  background: #2d1515;
+  border: 1px solid #7f1d1d;
+  color: #fca5a5;
+}
+
+.diff-fixed pre {
+  background: #14291a;
+  border: 1px solid #14532d;
+  color: #86efac;
+}
+
 .history {
   display: grid;
   grid-template-columns: 1fr 2fr;
@@ -260,4 +310,3 @@ body {
 .history-detail {
   padding: 0.5rem;
 }
-
