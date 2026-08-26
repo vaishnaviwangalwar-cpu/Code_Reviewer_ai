@@ -56,7 +56,16 @@ def create_review(request: ReviewRequest):
             clean_result = clean_result[:-3]
         clean_result = clean_result.strip()
 
-        parsed = json.loads(clean_result)
+        try:
+            parsed = json.loads(clean_result)
+        except json.JSONDecodeError:
+            start_idx = clean_result.find("{")
+            end_idx = clean_result.rfind("}")
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                parsed = json.loads(clean_result[start_idx : end_idx + 1])
+            else:
+                raise
+
         issues = parsed.get("issues", [])
         review_id = save_review(request.code, issues)
         return {"id": review_id, "issues": issues}
@@ -87,11 +96,23 @@ def stream_review(request: ReviewRequest):
                 save_review(request.code, issues)
                 yield f"data: {json.dumps({'done': True, 'issues': issues})}\n\n"
             except json.JSONDecodeError:
+                start_idx = clean_response.find("{")
+                end_idx = clean_response.rfind("}")
+                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                    try:
+                        parsed = json.loads(clean_response[start_idx : end_idx + 1])
+                        issues = parsed.get("issues", [])
+                        save_review(request.code, issues)
+                        yield f"data: {json.dumps({'done': True, 'issues': issues})}\n\n"
+                        return
+                    except Exception:
+                        pass
                 yield f"data: {json.dumps({'done': True, 'error': 'Failed to parse review JSON', 'raw': full_response})}\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'done': True, 'error': str(e)})}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
 
 class FixRequest(BaseModel):
     code: str
