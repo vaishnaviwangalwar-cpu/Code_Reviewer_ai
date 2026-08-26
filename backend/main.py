@@ -21,14 +21,15 @@ init_db()
 # Create the FastAPI app
 app = FastAPI(title="CodeLens API")
 
-# Ensure http://localhost:5173 and 127.0.0.1:5173 are allowed
+# Ensure all local frontend origins are allowed
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"], 
+    allow_origin_regex=".*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Define the expected shape of incoming review requests
 class ReviewRequest(BaseModel):
@@ -56,16 +57,7 @@ def create_review(request: ReviewRequest):
             clean_result = clean_result[:-3]
         clean_result = clean_result.strip()
 
-        try:
-            parsed = json.loads(clean_result)
-        except json.JSONDecodeError:
-            start_idx = clean_result.find("{")
-            end_idx = clean_result.rfind("}")
-            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-                parsed = json.loads(clean_result[start_idx : end_idx + 1])
-            else:
-                raise
-
+        parsed = json.loads(clean_result)
         issues = parsed.get("issues", [])
         review_id = save_review(request.code, issues)
         return {"id": review_id, "issues": issues}
@@ -96,23 +88,11 @@ def stream_review(request: ReviewRequest):
                 save_review(request.code, issues)
                 yield f"data: {json.dumps({'done': True, 'issues': issues})}\n\n"
             except json.JSONDecodeError:
-                start_idx = clean_response.find("{")
-                end_idx = clean_response.rfind("}")
-                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-                    try:
-                        parsed = json.loads(clean_response[start_idx : end_idx + 1])
-                        issues = parsed.get("issues", [])
-                        save_review(request.code, issues)
-                        yield f"data: {json.dumps({'done': True, 'issues': issues})}\n\n"
-                        return
-                    except Exception:
-                        pass
                 yield f"data: {json.dumps({'done': True, 'error': 'Failed to parse review JSON', 'raw': full_response})}\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'done': True, 'error': str(e)})}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
-
 
 class FixRequest(BaseModel):
     code: str
