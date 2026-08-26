@@ -1,14 +1,18 @@
+import os
 import sqlite3
 import json
 from datetime import datetime
 
+DB_PATH = os.environ.get(
+    "DATABASE_PATH",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "reviews.db"),
+)
 
 # Connect to the SQLite database file
 def get_connection():
-    conn = sqlite3.connect("reviews.db")
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
-
 
 # Create the reviews table if it doesn't exist yet
 def init_db():
@@ -45,13 +49,18 @@ def get_all_reviews() -> list:
         "SELECT id, code, result, created_at FROM reviews ORDER BY created_at DESC"
     ).fetchall()
     conn.close()
-    return [
-        {
+    reviews = []
+    for row in rows:
+        try:
+            parsed_result = json.loads(row["result"])
+        except Exception:
+            parsed_result = []
+        reviews.append({
             "id": row["id"],
             "code": row["code"],
-            "result": json.loads(row["result"]),
+            "result": parsed_result,
             "created_at": row["created_at"],
-        }
-        for row in rows
-    ]
+        })
+    return reviews
+
 

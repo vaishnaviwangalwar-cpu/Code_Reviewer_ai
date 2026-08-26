@@ -24,27 +24,43 @@ function App() {
         body: JSON.stringify({ code }),
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullText = "";
+      let buffer = "";
 
-            while (true) {
+      while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const text = decoder.decode(value);
-        const lines = text.split("\n");
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
 
         for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = JSON.parse(line.slice(6));
-            if (data.chunk) {
-              fullText += data.chunk;
-              setStreamingText(fullText);
-            }
-            if (data.done && data.issues) {
-              setIssues(data.issues);
-              setStreamingText("");
+          const trimmed = line.trim();
+          if (trimmed.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(trimmed.slice(6));
+              if (data.chunk) {
+                fullText += data.chunk;
+                setStreamingText(fullText);
+              }
+              if (data.done) {
+                if (data.issues) {
+                  setIssues(data.issues);
+                }
+                setStreamingText("");
+                if (data.error) {
+                  console.error("Review error from backend:", data.error);
+                }
+              }
+            } catch (err) {
+              console.error("Failed to parse SSE JSON:", err);
             }
           }
         }
@@ -55,6 +71,7 @@ function App() {
       setIsStreaming(false);
     }
   };
+
 
   
   return (

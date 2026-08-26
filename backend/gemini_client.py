@@ -1,10 +1,21 @@
 import os
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
+load_dotenv()
 
-# Initialize the Gemini client with your API key
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+
+def get_client() -> genai.Client:
+    load_dotenv(override=True)
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError(
+            "GEMINI_API_KEY is not set. Please set the GEMINI_API_KEY environment variable or define it in a .env file."
+        )
+    return genai.Client(api_key=api_key)
+
 
 # JSON schema that tells Gemini the exact structure to return
 REVIEW_SCHEMA = {
@@ -46,10 +57,11 @@ SYSTEM_PROMPT = (
 
 def review_code(code: str) -> str:
     # Send the code to Gemini with the system prompt
+    client = get_client()
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model=MODEL_NAME,
         contents=f"Review this code:\n\n```\n{code}\n```",
-                config=types.GenerateContentConfig(
+        config=types.GenerateContentConfig(
             system_instruction=SYSTEM_PROMPT,
             response_mime_type="application/json",
             response_schema=REVIEW_SCHEMA,
@@ -59,8 +71,9 @@ def review_code(code: str) -> str:
 
 def review_code_stream(code: str):
     # Use generate_content_stream for real-time chunk delivery
+    client = get_client()
     for chunk in client.models.generate_content_stream(
-        model="gemini-2.5-flash",
+        model=MODEL_NAME,
         contents=f"Review this code:\n\n```\n{code}\n```",
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_PROMPT,
@@ -78,9 +91,9 @@ FIX_SYSTEM_PROMPT = (
     "Only output the corrected code, no explanations."
 )
 
-
 def fix_issue_stream(code: str, issue_title: str, issue_description: str):
     # Build a prompt with the original code and the specific issue
+    client = get_client()
     prompt = (
         f"Original code:\n```\n{code}\n```\n\n"
         f"Issue: {issue_title}\n"
@@ -88,7 +101,7 @@ def fix_issue_stream(code: str, issue_title: str, issue_description: str):
         f"Provide the corrected code:"
     )
     for chunk in client.models.generate_content_stream(
-        model="gemini-2.5-flash",
+        model=MODEL_NAME,
         contents=prompt,
         config=types.GenerateContentConfig(
             system_instruction=FIX_SYSTEM_PROMPT,

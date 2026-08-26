@@ -5,7 +5,7 @@ function ReviewHistory() {
   const [selectedReview, setSelectedReview] = useState(null);
   const [filter, setFilter] = useState("all");
 
-  const filteredIssues = selectedReview
+  const filteredIssues = selectedReview && Array.isArray(selectedReview.result)
     ? selectedReview.result.filter((issue) => filter === "all" || issue.category === filter)
     : [];
 
@@ -13,7 +13,11 @@ function ReviewHistory() {
   useEffect(() => {
     fetch("http://localhost:8000/reviews")
       .then((res) => res.json())
-      .then((data) => setReviews(data))
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setReviews(data);
+        }
+      })
       .catch((err) => console.error("Failed to fetch reviews:", err));
   }, []);
 
@@ -29,14 +33,14 @@ function ReviewHistory() {
             onClick={() => setSelectedReview(review)}
           >
             <pre className="code-preview">
-              {review.code.slice(0, 100)}
-              {review.code.length > 100 ? "..." : ""}
+              {review.code ? review.code.slice(0, 100) : ""}
+              {review.code && review.code.length > 100 ? "..." : ""}
             </pre>
             <span className="review-date">
               {new Date(review.created_at).toLocaleDateString()}
             </span>
             <span className="issue-count">
-              {review.result.length} issue{review.result.length !== 1 ? "s" : ""}
+              {Array.isArray(review.result) ? review.result.length : 0} issue{Array.isArray(review.result) && review.result.length === 1 ? "" : "s"}
             </span>
           </div>
         ))}

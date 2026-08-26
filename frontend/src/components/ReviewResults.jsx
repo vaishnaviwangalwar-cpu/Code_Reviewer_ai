@@ -1,17 +1,24 @@
 import { useState } from "react";
+
+const severityColors = {
+  critical: "#e74c3c",
+  warning: "#f39c12",
+  info: "#3498db",
+};
+
+const categoryLabels = {
+  bug: "Bug",
+  security: "Security",
+  performance: "Performance",
+  style: "Style",
+};
+
 function ReviewResults({ issues, streamingText, isStreaming, originalCode }) {
   // Track the fixed code for each issue by its index
   const [fixedCode, setFixedCode] = useState({});
   const [fixingIndex, setFixingIndex] = useState(null);
 
-  const categoryLabels = {
-    bug: "Bug",
-    security: "Security",
-    performance: "Performance",
-    style: "Style",
-  };
-
-    const handleFix = async (issue, index) => {
+  const handleFix = async (issue, index) => {
     setFixingIndex(index);
     setFixedCode((prev) => ({ ...prev, [index]: "" }));
 
@@ -26,22 +33,36 @@ function ReviewResults({ issues, streamingText, isStreaming, originalCode }) {
           issue_description: issue.description,
         }),
       });
-            // Read the SSE stream and update the fixed code as chunks arrive
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Read the SSE stream and update the fixed code as chunks arrive
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let fullFix = "";
+      let accumulatedText = "";
+      let buffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const text = decoder.decode(value);
-        const lines = text.split("\n");
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
         for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = JSON.parse(line.slice(6));
-            if (data.chunk) {
-              fullFix += data.chunk;
-              setFixedCode((prev) => ({ ...prev, [index]: fullFix }));
+          const trimmed = line.trim();
+          if (trimmed.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(trimmed.slice(6));
+              if (data.chunk) {
+                accumulatedText = accumulatedText + data.chunk;
+                const latestFix = accumulatedText;
+                setFixedCode((prev) => ({ ...prev, [index]: latestFix }));
+              }
+            } catch (err) {
+              console.error("Failed to parse fix SSE JSON:", err);
             }
           }
         }
@@ -60,7 +81,8 @@ function ReviewResults({ issues, streamingText, isStreaming, originalCode }) {
       </div>
     );
   }
-    return (
+
+  return (
     <div className="results">
       {isStreaming && (
         <div className="streaming-indicator">
@@ -77,7 +99,7 @@ function ReviewResults({ issues, streamingText, isStreaming, originalCode }) {
             <div key={index} className="issue-card">
               <div className="issue-header">
                 <span
-                  className="severity-badge"
+                  className={`severity-badge ${issue.severity}`}
                   style={{ backgroundColor: severityColors[issue.severity] }}
                 >
                   {issue.severity}
@@ -86,7 +108,7 @@ function ReviewResults({ issues, streamingText, isStreaming, originalCode }) {
                   {categoryLabels[issue.category] || issue.category}
                 </span>
                 <h3>{issue.title}</h3>
-                                <button
+                <button
                   className="fix-button"
                   onClick={() => handleFix(issue, index)}
                   disabled={fixingIndex === index}
@@ -95,7 +117,7 @@ function ReviewResults({ issues, streamingText, isStreaming, originalCode }) {
                 </button>
               </div>
               <p>{issue.description}</p>
-                            {fixedCode[index] !== undefined && (
+              {fixedCode[index] !== undefined && (
                 <div className="diff-view">
                   <div className="diff-panel diff-original">
                     <h4>Original</h4>
@@ -115,4 +137,4 @@ function ReviewResults({ issues, streamingText, isStreaming, originalCode }) {
   );
 }
 
-export default ReviewResults;
+export default ReviewResults;
